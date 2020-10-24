@@ -26,7 +26,7 @@ const String errorIncorrectIconName =
     'E.g. "ic_my_new_icon"';
 
 String introMessage(String currentVersion) => '''
-  ════════════════════════════════════════════
-     FLUTTER LAUNCHER ICONS (v$currentVersion)                               
-  ════════════════════════════════════════════
+  ══════════════════════════════════════════════════════════════════════════════
+     FLUTTER LAUNCHER ICONS + ADAPTIVE ICON GENERATOR (v$currentVersion)                               
+  ══════════════════════════════════════════════════════════════════════════════
   ''';

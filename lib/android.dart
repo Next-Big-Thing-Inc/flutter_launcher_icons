@@ -5,6 +5,9 @@ import 'package:image/image.dart';
 import 'package:flutter_launcher_icons/custom_exceptions.dart';
 import 'package:flutter_launcher_icons/constants.dart' as constants;
 
+import 'adaptive_generator.dart';
+import 'mask.dart';
+
 class AndroidIconTemplate {
   AndroidIconTemplate({this.size, this.directoryName});
 
@@ -28,11 +31,29 @@ List<AndroidIconTemplate> androidIcons = <AndroidIconTemplate>[
   AndroidIconTemplate(directoryName: 'mipmap-xxxhdpi', size: 192),
 ];
 
-void createDefaultIcons(
-    Map<String, dynamic> flutterLauncherIconsConfig, String flavor) {
+const DEFAULT_ADAPTIVE_ZOOM_ANDROID = 0.25;
+
+/// Method for the retrieval of the Android icon image
+/// If generate_image_from_adaptive is found, icons are generated
+/// otherwise if image_path_android is found, this will be prioritised over the image_path
+/// value.
+Future<Image> _getAndroidIconImage(Map<String, dynamic> config) async {
+  Image image;
+  if (config['generate_image_from_adaptive'] == true) {
+    printStatus('Generating Android launcher icon from adaptive icons');
+    image = await createImageFromAdaptive(
+        config, Mask.androidSquare, DEFAULT_ADAPTIVE_ZOOM_ANDROID);
+  } else {
+    final String filePath = config['image_path_android'] ?? config['image_path'];
+    image = decodeImage(File(filePath).readAsBytesSync());
+  }
+  return image;
+}
+
+Future<void> createDefaultIcons(
+    Map<String, dynamic> flutterLauncherIconsConfig, String flavor) async {
   printStatus('Creating default icons Android');
-  final String filePath = getAndroidIconPath(flutterLauncherIconsConfig);
-  final Image image = decodeImage(File(filePath).readAsBytesSync());
+  Image image = await _getAndroidIconImage(flutterLauncherIconsConfig);
   final File androidManifestFile = File(constants.androidManifestFile);
   if (isCustomAndroidFile(flutterLauncherIconsConfig)) {
     printStatus('Adding a new Android launcher icon');
@@ -44,12 +65,14 @@ void createDefaultIcons(
     }
     overwriteAndroidManifestWithNewLauncherIcon(iconName, androidManifestFile);
   } else {
-    printStatus('Overwriting the default Android launcher icon with a new icon');
+    printStatus(
+        'Overwriting the default Android launcher icon with a new icon');
     for (AndroidIconTemplate template in androidIcons) {
       overwriteExistingIcons(
           template, image, constants.androidFileName, flavor);
     }
-    overwriteAndroidManifestWithNewLauncherIcon(constants.androidDefaultIconName, androidManifestFile);
+    overwriteAndroidManifestWithNewLauncherIcon(
+        constants.androidDefaultIconName, androidManifestFile);
   }
 }
 
@@ -105,7 +128,8 @@ void updateColorsXmlFile(String backgroundConfig, String flavor) {
     updateColorsFile(colorsXml, backgroundConfig);
   } else {
     printStatus('No colors.xml file found in your Android project');
-    printStatus('Creating colors.xml file and adding it to your Android project');
+    printStatus(
+        'Creating colors.xml file and adding it to your Android project');
     createNewColorsFile(backgroundConfig, flavor);
   }
 }
@@ -295,13 +319,6 @@ int minSdk() {
     }
   }
   return 0; // Didn't find minSdk, assume the worst
-}
-
-/// Method for the retrieval of the Android icon path
-/// If image_path_android is found, this will be prioritised over the image_path
-/// value.
-String getAndroidIconPath(Map<String, dynamic> config) {
-  return config['image_path_android'] ?? config['image_path'];
 }
 
 /// Returns true if the adaptive icon configuration is a PNG image

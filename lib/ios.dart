@@ -4,6 +4,9 @@ import 'package:flutter_launcher_icons/utils.dart';
 import 'package:image/image.dart';
 import 'package:flutter_launcher_icons/constants.dart';
 
+import 'adaptive_generator.dart';
+import 'mask.dart';
+
 /// File to handle the creation of icons for iOS platform
 class IosIconTemplate {
   IosIconTemplate({this.size, this.name});
@@ -30,9 +33,22 @@ List<IosIconTemplate> iosIcons = <IosIconTemplate>[
   IosIconTemplate(name: '-1024x1024@1x', size: 1024),
 ];
 
-void createIcons(Map<String, dynamic> config, String flavor) {
-  final String filePath = config['image_path_ios'] ?? config['image_path'];
-  final Image image = decodeImage(File(filePath).readAsBytesSync());
+const DEFAULT_ADAPTIVE_ZOOM_IOS= 0.5;
+
+Future<Image> _getIosIconImage(Map<String, dynamic> config) async{
+  Image image;
+  if(config['generate_image_from_adaptive'] == true){
+    printStatus('Generating iOS launcher icon from adaptive icons');
+    image = await createImageFromAdaptive(config, Mask.ios, DEFAULT_ADAPTIVE_ZOOM_IOS);
+  }else{
+    final String filePath = config['image_path_ios'] ?? config['image_path'];
+    image = decodeImage(File(filePath).readAsBytesSync());
+  }
+  return image;
+}
+
+Future<void> createIcons(Map<String, dynamic> config, String flavor) async {
+  final Image image = await _getIosIconImage(config);
   String iconName;
   final dynamic iosConfig = config['ios'];
   if (flavor != null) {

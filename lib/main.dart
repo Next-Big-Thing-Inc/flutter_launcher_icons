@@ -1,8 +1,6 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:args/args.dart';
-import 'package:flutter_launcher_icons/utils.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 import 'package:flutter_launcher_icons/android.dart' as android_launcher_icons;
@@ -96,14 +94,13 @@ Future<void> createIconsFromConfig(Map<String, dynamic> config, [String flavor])
   }
 
   if (isNeedingNewAndroidIcon(config)) {
-    android_launcher_icons.createDefaultIcons(config, flavor);
+    await android_launcher_icons.createDefaultIcons(config, flavor);
   }
   if (hasAndroidAdaptiveConfig(config)) {
     android_launcher_icons.createAdaptiveIcons(config, flavor);
   }
   if (isNeedingNewIOSIcon(config)) {
-    ios_launcher_icons.createIcons(config, flavor);
-
+    await ios_launcher_icons.createIcons(config, flavor);
   }
 }
 
@@ -170,7 +167,8 @@ Map<String, dynamic> loadConfigFile(String path, String fileOptionResult) {
 }
 
 bool isImagePathInConfig(Map<String, dynamic> flutterIconsConfig) {
-  return flutterIconsConfig.containsKey('image_path') ||
+  return flutterIconsConfig["generate_image_from_adaptive"] == true
+      || flutterIconsConfig.containsKey('image_path') ||
       (flutterIconsConfig.containsKey('image_path_android') &&
           flutterIconsConfig.containsKey('image_path_ios'));
 }
